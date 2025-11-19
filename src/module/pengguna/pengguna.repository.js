@@ -31,7 +31,7 @@ async function findMany({ q, peran, fakultasId, prodiId, page = 1, pageSize = 20
 
 function findById(id) {
     return prisma.pengguna.findUnique({
-        where: { id },
+        where: { id, deletedAt: null },
         include: { fakultas: true, prodi: true },
     });
 }
