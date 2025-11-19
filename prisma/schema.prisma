@@ -1,0 +1,534 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/**
+ * ========== ENUM ==========
+ */
+
+enum PeranPengguna {
+  ADMIN
+  TU_FAKULTAS
+  TU_PRODI
+  DOSEN
+}
+
+enum Paruh {
+  GANJIL
+  GENAP
+}
+
+enum StatusBatch {
+  DRAF
+  SIAP
+  FINAL
+}
+
+enum StatusPenugasanMengajar {
+  DRAF
+  SIAP
+}
+
+enum StatusPengajuan {
+  DRAF
+  TERKIRIM
+  DISETUJUI
+  DITOLAK
+}
+
+enum JenisKendala {
+  KAPASITAS_RUANG
+  KETERSEDIAAN_DOSEN
+  TABRAKAN_JADWAL
+  LAINNYA
+}
+
+/**
+ * ========== MASTER ORGANISASI ==========
+ */
+
+model Fakultas {
+  id        String          @id @default(cuid())
+  kode      String          @unique
+  nama      String
+
+  prodi     Prodi[]
+  ruang     Ruang[]
+  periode   PeriodeAkademik[]
+  dosen     Dosen[]
+  pengguna  Pengguna[]
+  batch     BatchJadwal[]
+
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  deletedAt DateTime?
+}
+
+model Prodi {
+  id         String           @id @default(cuid())
+  fakultasId String
+  fakultas   Fakultas         @relation(fields: [fakultasId], references: [id])
+
+  kode       String
+  nama       String
+  jenjang    String           // S1, D3, dll
+
+  kurikulum  Kurikulum[]
+  kelas      KelompokKelas[]
+  programMatkul ProgramMatkul[]
+  pengguna   Pengguna[]
+  dosen      Dosen[]
+
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  deletedAt  DateTime?
+}
+
+/**
+ * ========== PENGGUNA & DOSEN ==========
+ */
+
+model Pengguna {
+  id        String           @id @default(cuid())
+  nama      String
+  email     String           @unique
+  password  String           // hash
+  peran     PeranPengguna
+
+  fakultasId String?
+  prodiId    String?
+
+  fakultas  Fakultas?        @relation(fields: [fakultasId], references: [id])
+  prodi     Prodi?           @relation(fields: [prodiId], references: [id])
+
+  dosen     Dosen?
+
+  batchDibuat        BatchJadwal[]
+
+  pengajuanDibuat    Pengajuan[] @relation("PengajuanDibuatOleh")
+  pengajuanDisetujui Pengajuan[] @relation("PengajuanDisetujuiOleh")
+
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  deletedAt DateTime?
+}
+
+model Dosen {
+  id                 String              @id @default(cuid())
+  penggunaId         String              @unique
+  pengguna           Pengguna            @relation(fields: [penggunaId], references: [id])
+
+  nidn               String?             @unique
+  bebanMengajarMaks  Int?
+  fakultasId         String?
+  fakultas           Fakultas?           @relation(fields: [fakultasId], references: [id])
+  prodiId            String?
+  prodi              Prodi?              @relation(fields: [prodiId], references: [id])
+
+  penugasan          PenugasanMengajar[]
+  preferensi         PreferensiDosen[]
+  pengajuan          Pengajuan[]
+  gaGen              GaGen[]
+
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+}
+
+/**
+ * ========== PERIODE AKADEMIK & WAKTU ==========
+ */
+
+model PeriodeAkademik {
+  id            String           @id @default(cuid())
+  fakultasId    String
+  fakultas      Fakultas         @relation(fields: [fakultasId], references: [id])
+
+  nama          String
+  paruh         Paruh
+  tahunMulai    Int
+  tahunSelesai  Int
+  tanggalMulai  DateTime
+  tanggalSelesai DateTime
+  aktif         Boolean          @default(false)
+
+  programMatkul ProgramMatkul[]
+  batch         BatchJadwal[]
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?
+}
+
+model Hari {
+  id        String            @id @default(cuid())
+  nama      String
+  urutan    Int               // 1 = Senin, dst.
+
+  jadwal    JadwalKuliah[]
+  preferensi PreferensiDosen[]
+  gaGen     GaGen[]
+
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  deletedAt DateTime?
+}
+
+model SlotWaktu {
+  id          String          @id @default(cuid())
+  nama        String
+  jamMulai    DateTime        @db.Time(0)
+  jamSelesai  DateTime        @db.Time(0)
+  durasiMenit Int
+
+  jadwal      JadwalKuliah[]
+  preferensi  PreferensiDosen[]
+  gaGen       GaGen[]
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deletedAt   DateTime?
+}
+
+/**
+ * ========== RUANG ==========
+ */
+
+model Ruang {
+  id         String         @id @default(cuid())
+  fakultasId String
+  fakultas   Fakultas       @relation(fields: [fakultasId], references: [id])
+
+  kode       String
+  nama       String
+  kapasitas  Int
+  jenis      String         // teori, lab, dsb
+  lokasi     String?
+  aktif      Boolean        @default(true)
+
+  jadwal     JadwalKuliah[]
+  gaGen      GaGen[]
+
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  deletedAt  DateTime?
+
+  @@unique([fakultasId, kode])
+}
+
+/**
+ * ========== KURIKULUM & MATA KULIAH ==========
+ */
+
+model MataKuliah {
+  id            String             @id @default(cuid())
+  kode          String             @unique
+  nama          String
+  sksTeori      Int                @default(0)
+  sksPraktik    Int                @default(0)
+  sksTotal      Int
+  jenis         String             // wajib / pilihan
+
+  kurikulumMatkul KurikulumMatkul[]
+  programMatkul   ProgramMatkul[]
+
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  deletedAt     DateTime?
+}
+
+model Kurikulum {
+  id             String            @id @default(cuid())
+  prodiId        String
+  prodi          Prodi             @relation(fields: [prodiId], references: [id])
+
+  nama           String            // contoh: Kurikulum 2020
+  angkatanMulai  Int
+  angkatanSelesai Int?
+  aktif          Boolean           @default(true)
+
+  matkul         KurikulumMatkul[]
+  programMatkul  ProgramMatkul[]
+
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deletedAt      DateTime?
+
+  @@unique([prodiId, nama])
+}
+
+model KurikulumMatkul {
+  id            String      @id @default(cuid())
+  kurikulumId   String
+  kurikulum     Kurikulum   @relation(fields: [kurikulumId], references: [id])
+
+  mataKuliahId  String
+  mataKuliah    MataKuliah  @relation(fields: [mataKuliahId], references: [id])
+
+  semester      Int
+  minimalSemester Int?
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+
+  @@unique([kurikulumId, mataKuliahId])
+}
+
+/**
+ * Matkul yang benar-benar ditawarkan di periode tertentu
+ */
+model ProgramMatkul {
+  id                 String             @id @default(cuid())
+  prodiId            String
+  prodi              Prodi              @relation(fields: [prodiId], references: [id])
+
+  periodeId          String
+  periode            PeriodeAkademik    @relation(fields: [periodeId], references: [id])
+
+  mataKuliahId       String
+  mataKuliah         MataKuliah         @relation(fields: [mataKuliahId], references: [id])
+
+  kurikulumId        String?
+  kurikulum          Kurikulum?         @relation(fields: [kurikulumId], references: [id])
+
+  jumlahKelompokKelas Int
+
+  penugasan          PenugasanMengajar[]
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+
+  @@unique([prodiId, periodeId, mataKuliahId, kurikulumId])
+}
+
+/**
+ * ========== KELAS & PENUGASAN MENGAJAR ==========
+ */
+
+model KelompokKelas {
+  id          String              @id @default(cuid())
+  prodiId     String
+  prodi       Prodi               @relation(fields: [prodiId], references: [id])
+
+  kode        String              // A, B, C
+  angkatan    Int                 // 2021, 2022, ...
+  kapasitas   Int?
+
+  penugasan   PenugasanMengajar[]
+
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  deletedAt   DateTime?
+
+  @@unique([prodiId, kode, angkatan])
+}
+
+model PenugasanMengajar {
+  id                    String               @id @default(cuid())
+
+  programMatkulId       String
+  programMatkul         ProgramMatkul        @relation(fields: [programMatkulId], references: [id])
+
+  kelompokKelasId       String
+  kelompokKelas         KelompokKelas        @relation(fields: [kelompokKelasId], references: [id])
+
+  dosenId               String
+  dosen                 Dosen                @relation(fields: [dosenId], references: [id])
+
+  jumlahSesiPerMinggu   Int
+  butuhLab              Boolean              @default(false)
+  preferensiRuangJenis  String?              // teori/lab kalau ada preferensi
+  status                StatusPenugasanMengajar
+
+  jadwal                JadwalKuliah[]
+  pengajuanKendala      PengajuanKendala[]
+  gaGen                 GaGen[]
+
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  deletedAt             DateTime?
+}
+
+model PreferensiDosen {
+  id           String       @id @default(cuid())
+  dosenId      String
+  dosen        Dosen        @relation(fields: [dosenId], references: [id])
+
+  hariId       String
+  hari         Hari         @relation(fields: [hariId], references: [id])
+
+  slotWaktuId  String
+  slotWaktu    SlotWaktu    @relation(fields: [slotWaktuId], references: [id])
+
+  bolehMengajar Boolean     @default(true)
+  prioritas     Int?
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  @@unique([dosenId, hariId, slotWaktuId])
+}
+
+/**
+ * ========== BATCH JADWAL & HASIL GA ==========
+ */
+
+model BatchJadwal {
+  id              String           @id @default(cuid())
+
+  fakultasId      String
+  fakultas        Fakultas         @relation(fields: [fakultasId], references: [id])
+
+  periodeId       String
+  periode         PeriodeAkademik  @relation(fields: [periodeId], references: [id])
+
+  nama            String
+  status          StatusBatch      @default(SIAP)
+
+  ukuranPopulasi  Int
+  jumlahGenerasi  Int
+  fitnessTerbaik  Float?
+
+  tanggalGenerate DateTime         @default(now())
+
+  dibuatOlehId    String
+  dibuatOleh      Pengguna         @relation(fields: [dibuatOlehId], references: [id])
+
+  jadwal          JadwalKuliah[]
+  kromosom        GaKromosom[]
+  pengajuan       Pengajuan[]
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+}
+
+model JadwalKuliah {
+  id                   String              @id @default(cuid())
+
+  batchId              String
+  batch                BatchJadwal         @relation(fields: [batchId], references: [id])
+
+  penugasanMengajarId  String
+  penugasanMengajar    PenugasanMengajar   @relation(fields: [penugasanMengajarId], references: [id])
+
+  hariId               String
+  hari                 Hari                @relation(fields: [hariId], references: [id])
+
+  slotWaktuId          String
+  slotWaktu            SlotWaktu           @relation(fields: [slotWaktuId], references: [id])
+
+  ruangId              String
+  ruang                Ruang               @relation(fields: [ruangId], references: [id])
+
+  pengajuanKendala     PengajuanKendala[]
+
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  deletedAt            DateTime?
+}
+
+/**
+ * ========== PENGAJUAN & KENDALA ==========
+ */
+
+model Pengajuan {
+  id              String           @id @default(cuid())
+
+  dosenId         String
+  dosen           Dosen            @relation(fields: [dosenId], references: [id])
+
+  batchId         String?
+  batch           BatchJadwal?     @relation(fields: [batchId], references: [id])
+
+  tipe            String           // PERMINTAAN_JADWAL, PERUBAHAN_JADWAL, dll
+  status          StatusPengajuan  @default(DRAF)
+  alasan          String?
+
+  dibuatOlehId    String
+  dibuatOleh      Pengguna         @relation("PengajuanDibuatOleh", fields: [dibuatOlehId], references: [id])
+
+  disetujuiOlehId String?
+  disetujuiOleh   Pengguna?        @relation("PengajuanDisetujuiOleh", fields: [disetujuiOlehId], references: [id])
+
+  kendala         PengajuanKendala[]
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+}
+
+model PengajuanKendala {
+  id                   String               @id @default(cuid())
+  pengajuanId          String
+  pengajuan            Pengajuan           @relation(fields: [pengajuanId], references: [id])
+
+  jenisKendala         JenisKendala
+  deskripsi            String?
+
+  penugasanMengajarId  String?
+  penugasanMengajar    PenugasanMengajar?  @relation(fields: [penugasanMengajarId], references: [id])
+
+  jadwalKuliahId       String?
+  jadwalKuliah         JadwalKuliah?       @relation(fields: [jadwalKuliahId], references: [id])
+
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  deletedAt            DateTime?
+}
+
+/**
+ * ========== GA LOGGING ==========
+ */
+
+model GaKromosom {
+  id          String        @id @default(cuid())
+
+  batchId     String
+  batch       BatchJadwal   @relation(fields: [batchId], references: [id])
+
+  generasi    Int
+  fitness     Float
+  isBest      Boolean       @default(false)
+
+  gen         GaGen[]
+
+  createdAt   DateTime      @default(now())
+}
+
+model GaGen {
+  id                    String              @id @default(cuid())
+
+  kromosomId            String
+  kromosom              GaKromosom         @relation(fields: [kromosomId], references: [id])
+
+  penugasanMengajarId   String
+  penugasanMengajar     PenugasanMengajar  @relation(fields: [penugasanMengajarId], references: [id])
+
+  hariId                String
+  hari                  Hari               @relation(fields: [hariId], references: [id])
+
+  slotWaktuId           String
+  slotWaktu             SlotWaktu          @relation(fields: [slotWaktuId], references: [id])
+
+  ruangId               String
+  ruang                 Ruang              @relation(fields: [ruangId], references: [id])
+
+  dosenId               String
+  dosen                 Dosen              @relation(fields: [dosenId], references: [id])
+
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  deletedAt             DateTime?
+}
