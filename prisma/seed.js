@@ -19,14 +19,14 @@ async function main() {
 
     for (let i = 0; i < hariNames.length; i++) {
         await prisma.hari.upsert({
-            where: { id: `seed-hari-${i + 1}` },
+            where: { id: `d${i + 1}` },
             update: {
                 nama: hariNames[i],
                 urutan: i + 1,
                 deletedAt: null,
             },
             create: {
-                id: `seed-hari-${i + 1}`,
+                id: `d${i + 1}`,
                 nama: hariNames[i],
                 urutan: i + 1,
             },
@@ -75,29 +75,42 @@ async function main() {
     console.log('✅ Seed SlotWaktu selesai');
 
     /**
-     * 3. FAKULTAS
+     * 3. FAKULTAS - FIX: gunakan findFirst + create
      */
-    const fakultasFTS = await prisma.fakultas.upsert({
-        where: { kode: 'FTS' },
-        update: {
-            nama: 'Fakultas Teknik dan Sains',
-            deletedAt: null,
-        },
-        create: {
+    let fakultasFTS = await prisma.fakultas.findFirst({
+        where: {
             kode: 'FTS',
-            nama: 'Fakultas Teknik dan Sains',
-        },
+            deletedAt: null
+        }
     });
+
+    if (!fakultasFTS) {
+        fakultasFTS = await prisma.fakultas.create({
+            data: {
+                kode: 'FTS',
+                nama: 'Fakultas Teknik dan Sains'
+            }
+        });
+        console.log('✅ Fakultas FTS created');
+    } else {
+        console.log('ℹ️ Fakultas FTS already exists');
+    }
 
     console.log('✅ Seed Fakultas selesai');
 
     /**
-     * 4. PRODI (contoh: TI & SI)
-     * NOTE: Karena di schema Prodi tidak punya @unique kode saja,
-     * kita perlu buat dulu atau pakai createMany dengan skipDuplicates
+     * 4. PRODI - FIX: gunakan findFirst + create
      */
-    try {
-        const prodiTI = await prisma.prodi.create({
+    let prodiTI = await prisma.prodi.findFirst({
+        where: {
+            kode: 'TI',
+            fakultasId: fakultasFTS.id,
+            deletedAt: null
+        }
+    });
+
+    if (!prodiTI) {
+        prodiTI = await prisma.prodi.create({
             data: {
                 kode: 'TI',
                 nama: 'Teknik Informatika',
@@ -106,12 +119,20 @@ async function main() {
             }
         });
         console.log('✅ Prodi TI created');
-    } catch (error) {
-        console.log('ℹ️ Prodi TI sudah ada, mencari yang existing...');
+    } else {
+        console.log('ℹ️ Prodi TI already exists');
     }
 
-    try {
-        const prodiSI = await prisma.prodi.create({
+    let prodiSI = await prisma.prodi.findFirst({
+        where: {
+            kode: 'SI',
+            fakultasId: fakultasFTS.id,
+            deletedAt: null
+        }
+    });
+
+    if (!prodiSI) {
+        prodiSI = await prisma.prodi.create({
             data: {
                 kode: 'SI',
                 nama: 'Sistem Informasi',
@@ -120,18 +141,9 @@ async function main() {
             }
         });
         console.log('✅ Prodi SI created');
-    } catch (error) {
-        console.log('ℹ️ Prodi SI sudah ada, mencari yang existing...');
+    } else {
+        console.log('ℹ️ Prodi SI already exists');
     }
-
-    // Ambil prodi yang sudah ada
-    const prodiTI = await prisma.prodi.findFirst({
-        where: { kode: 'TI', fakultasId: fakultasFTS.id }
-    });
-
-    const prodiSI = await prisma.prodi.findFirst({
-        where: { kode: 'SI', fakultasId: fakultasFTS.id }
-    });
 
     console.log('✅ Seed Prodi selesai');
 
@@ -222,65 +234,77 @@ async function main() {
     /**
      * 7. MATA KULIAH
      */
-    const mkAlgo = await prisma.mataKuliah.upsert({
-        where: { kode: 'IF201' },
-        update: {
-            nama: 'Algoritma dan Pemrograman',
-            sksTeori: 2,
-            sksPraktik: 1,
-            sksTotal: 3,
-            jenis: 'WAJIB',
-            deletedAt: null,
-        },
-        create: {
+    /**
+     * 7. MATA KULIAH - FIX: gunakan findFirst + create
+     */
+    let mkAlgo = await prisma.mataKuliah.findFirst({
+        where: {
             kode: 'IF201',
-            nama: 'Algoritma dan Pemrograman',
-            sksTeori: 2,
-            sksPraktik: 1,
-            sksTotal: 3,
-            jenis: 'WAJIB',
-        },
+            deletedAt: null
+        }
     });
 
-    const mkBD = await prisma.mataKuliah.upsert({
-        where: { kode: 'IF301' },
-        update: {
-            nama: 'Basis Data',
-            sksTeori: 2,
-            sksPraktik: 1,
-            sksTotal: 3,
-            jenis: 'WAJIB',
-            deletedAt: null,
-        },
-        create: {
+    if (!mkAlgo) {
+        mkAlgo = await prisma.mataKuliah.create({
+            data: {
+                kode: 'IF201',
+                nama: 'Algoritma dan Pemrograman',
+                sksTeori: 2,
+                sksPraktik: 1,
+                sksTotal: 3,
+                jenis: 'WAJIB',
+            }
+        });
+        console.log('✅ Mata Kuliah Algoritma created');
+    } else {
+        console.log('ℹ️ Mata Kuliah Algoritma already exists');
+    }
+
+    let mkBD = await prisma.mataKuliah.findFirst({
+        where: {
             kode: 'IF301',
-            nama: 'Basis Data',
-            sksTeori: 2,
-            sksPraktik: 1,
-            sksTotal: 3,
-            jenis: 'WAJIB',
-        },
+            deletedAt: null
+        }
     });
 
-    const mkJarkom = await prisma.mataKuliah.upsert({
-        where: { kode: 'IF401' },
-        update: {
-            nama: 'Jaringan Komputer',
-            sksTeori: 2,
-            sksPraktik: 1,
-            sksTotal: 3,
-            jenis: 'WAJIB',
-            deletedAt: null,
-        },
-        create: {
+    if (!mkBD) {
+        mkBD = await prisma.mataKuliah.create({
+            data: {
+                kode: 'IF301',
+                nama: 'Basis Data',
+                sksTeori: 2,
+                sksPraktik: 1,
+                sksTotal: 3,
+                jenis: 'WAJIB',
+            }
+        });
+        console.log('✅ Mata Kuliah Basis Data created');
+    } else {
+        console.log('ℹ️ Mata Kuliah Basis Data already exists');
+    }
+
+    let mkJarkom = await prisma.mataKuliah.findFirst({
+        where: {
             kode: 'IF401',
-            nama: 'Jaringan Komputer',
-            sksTeori: 2,
-            sksPraktik: 1,
-            sksTotal: 3,
-            jenis: 'WAJIB',
-        },
+            deletedAt: null
+        }
     });
+
+    if (!mkJarkom) {
+        mkJarkom = await prisma.mataKuliah.create({
+            data: {
+                kode: 'IF401',
+                nama: 'Jaringan Komputer',
+                sksTeori: 2,
+                sksPraktik: 1,
+                sksTotal: 3,
+                jenis: 'WAJIB',
+            }
+        });
+        console.log('✅ Mata Kuliah Jaringan Komputer created');
+    } else {
+        console.log('ℹ️ Mata Kuliah Jaringan Komputer already exists');
+    }
 
     console.log('✅ Seed MataKuliah selesai');
 

@@ -209,7 +209,7 @@ model SlotWaktu {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  @@unique([jamMulai, jamSelesai])
+  @@unique([jamMulai, jamSelesai, deletedAt])
 }
 
 //  ========== RUANG ==========
