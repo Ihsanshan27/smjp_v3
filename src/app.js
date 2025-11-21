@@ -22,6 +22,7 @@ app.use('/api/master-data/hari', require('./module/master-data/hari/hari.routes'
 app.use('/api/master-data/slot-waktu', require('./module/master-data/slot-waktu/slotWaktu.routes'));
 app.use('/api/master-data/ruang', require('./module/master-data/ruang/ruang.routes'));
 app.use('/api/kurikulum/mata-kuliah', require('./module/kurikulum/mata-kuliah/mataKuliah.routes'));
+app.use('/api/kurikulum/kurikulum', require('./module/kurikulum/kurikulum/kurikulum.routes'))
 
 app.use(errorHandler);
 

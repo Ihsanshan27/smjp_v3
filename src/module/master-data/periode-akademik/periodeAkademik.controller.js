@@ -5,6 +5,9 @@ async function list(req, res, next) {
     try {
         const { query } = req.validated;
         const result = await service.listPeriode(query);
+        console.log("RAW:", req.query.aktif, typeof req.query.aktif);
+        console.log("VALIDATED:", req.validated.query.aktif, typeof req.validated.query.aktif);
+
         return success(res, result, 'Daftar periode akademik.');
     } catch (err) {
         next(err);

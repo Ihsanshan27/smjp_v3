@@ -239,11 +239,11 @@ model Ruang {
 //  ========== KURIKULUM & MATA KULIAH ==========
 
 model MataKuliah {
-  id         String          @id @default(cuid())
-  kode       String
-  nama       String
-  sks        Int             @default(0)
-  jenis      JenisMataKuliah // wajib / pilihan
+  id    String          @id @default(cuid())
+  kode  String
+  nama  String
+  sks   Int             @default(0)
+  jenis JenisMataKuliah // wajib / pilihan
 
   kurikulumMatkul KurikulumMatkul[]
   programMatkul   ProgramMatkul[]
@@ -272,7 +272,7 @@ model Kurikulum {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  @@unique([prodiId, nama])
+  @@unique([prodiId, nama, deletedAt])
 }
 
 model KurikulumMatkul {

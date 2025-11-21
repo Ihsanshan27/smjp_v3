@@ -7,7 +7,7 @@ const listPeriodeQueryDto = z.object({
         q: z.string().optional(),
         fakultasId: z.string().optional(),
         paruh: ParuhEnum.optional(),
-        aktif: z.coerce.boolean().optional(),
+        aktif: z.enum(["true", "false"]).transform(v => v === "true").optional(),
         page: z.coerce.number().int().min(1).default(1).optional(),
         pageSize: z.coerce.number().int().min(1).max(100).default(20).optional(),
     }),

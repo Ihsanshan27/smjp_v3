@@ -18,7 +18,7 @@ async function findMany({ q, fakultasId, paruh, aktif, page = 1, pageSize = 20 }
             where,
             skip: (page - 1) * pageSize,
             take: pageSize,
-            orderBy: { tahunMulai: 'desc' },
+            orderBy: { createdAt: 'desc' },
             include: { fakultas: true },
         }),
         prisma.periodeAkademik.count({ where }),
