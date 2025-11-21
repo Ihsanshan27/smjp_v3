@@ -242,9 +242,7 @@ model MataKuliah {
   id         String          @id @default(cuid())
   kode       String
   nama       String
-  sksTeori   Int             @default(0)
-  sksPraktik Int             @default(0)
-  sksTotal   Int
+  sks        Int             @default(0)
   jenis      JenisMataKuliah // wajib / pilihan
 
   kurikulumMatkul KurikulumMatkul[]

@@ -6,7 +6,7 @@ async function list(req, res, next) {
     try {
         const { query } = req.validated;
         const result = await service.listFakultas(query);
-        return success(res, result, 'Daftar fakultas.');
+        return success(res, result, 'List daftar fakultas berhasil diambil.');
     } catch (err) {
         next(err);
     }
