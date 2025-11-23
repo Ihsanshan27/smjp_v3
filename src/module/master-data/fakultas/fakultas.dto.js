@@ -22,7 +22,7 @@ const updateFakultasDto = z.object({
     body: z.object({
         kode: z.string().min(2, 'Kode fakultas minimal 2 karakter').optional(),
         nama: z.string().min(2, 'Nama fakultas minimal 2 karakter').optional(),
-    })
+    }).partial(),
 })
 
 module.exports = {

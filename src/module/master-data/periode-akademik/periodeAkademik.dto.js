@@ -10,7 +10,7 @@ const listPeriodeQueryDto = z.object({
         aktif: z.enum(["true", "false"]).transform(v => v === "true").optional(),
         page: z.coerce.number().int().min(1).default(1).optional(),
         pageSize: z.coerce.number().int().min(1).max(100).default(20).optional(),
-    }),
+    }).partial(),
 });
 
 const createPeriodeDto = z.object({

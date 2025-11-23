@@ -27,7 +27,7 @@ const updateKurikulumDto = z.object({
         angkatanMulai: z.coerce.number().int().min(1900).optional(),
         angkatanSelesai: z.coerce.number().int().min(1900).nullable().optional(),
         aktif: z.boolean().optional(),
-    }),
+    }).partial(),
 });
 
 const assignMatkulDto = z.object({

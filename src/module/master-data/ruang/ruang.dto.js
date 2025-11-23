@@ -32,7 +32,7 @@ const updateRuangDto = z.object({
         jenis: jenisRuangEnum.optional(),
         lokasi: z.string().optional(),
         aktif: z.boolean().optional(),
-    }),
+    }).partial(),
 });
 
 module.exports = {

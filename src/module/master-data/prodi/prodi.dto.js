@@ -26,7 +26,7 @@ const updateProdiDto = z.object({
         kode: z.string().min(2).optional(),
         nama: z.string().min(3).optional(),
         jenjang: z.string().min(1).optional(),
-    }),
+    }).partial(),
 })
 
 module.exports = {

@@ -15,7 +15,7 @@ const updateSlotDto = z.object({
         nama: z.string().min(3).optional(),
         jamMulai: z.string().min(4).optional(),
         jamSelesai: z.string().min(4).optional(),
-    }),
+    }).partial(),
 });
 
 module.exports = { createSlotDto, updateSlotDto };

@@ -13,6 +13,7 @@ function validateDto(schema) {
             req.validated = parsed;
             next();
         } catch (err) {
+            console.log('DTO ERROR: ', err);
             if (err instanceof ZodError) {
                 const formatted = err.errors.map((e) => ({
                     path: e.path.join('.'),

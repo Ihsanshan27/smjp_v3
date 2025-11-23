@@ -22,7 +22,7 @@ const updateUserDto = z.object({
         peran: PeranEnum.optional(),
         fakultasId: z.string().optional().nullable(),
         prodiId: z.string().optional().nullable(),
-    }),
+    }).partial(),
 });
 
 const listUserQueryDto = z.object({

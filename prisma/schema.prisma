@@ -131,10 +131,11 @@ model Pengguna {
 }
 
 model Dosen {
-  id         String   @id @default(cuid())
-  penggunaId String   @unique
-  pengguna   Pengguna @relation(fields: [penggunaId], references: [id])
+  id         String    @id @default(cuid())
+  penggunaId String?   @unique
+  pengguna   Pengguna? @relation(fields: [penggunaId], references: [id])
 
+  nama              String?
   nidn              String?
   bebanMengajarMaks Int?
   fakultasId        String?

@@ -24,7 +24,7 @@ const updateMatkulDto = z.object({
         nama: z.string().min(3).optional(),
         sksTeori: z.coerce.number().int().min(0).optional(),
         jenis: z.string().min(3).optional(),
-    }),
+    }).partial(),
 });
 
 module.exports = {
