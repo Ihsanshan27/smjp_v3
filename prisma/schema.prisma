@@ -176,6 +176,8 @@ model PeriodeAkademik {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  @@unique([fakultasId, nama, deletedAt])
 }
 
 model Hari {
@@ -234,7 +236,7 @@ model Ruang {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  @@unique([fakultasId, kode])
+  @@unique([fakultasId, kode, deletedAt])
 }
 
 //  ========== KURIKULUM & MATA KULIAH ==========
@@ -291,7 +293,7 @@ model KurikulumMatkul {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  @@unique([kurikulumId, mataKuliahId])
+  @@unique([kurikulumId, mataKuliahId, deletedAt])
 }
 
 //  Matkul yang benar-benar ditawarkan di periode tertentu
@@ -318,7 +320,7 @@ model ProgramMatkul {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  @@unique([prodiId, periodeId, mataKuliahId, kurikulumId])
+  @@unique([prodiId, periodeId, mataKuliahId, kurikulumId, deletedAt])
   @@index([prodiId, periodeId])
 }
 
@@ -339,7 +341,7 @@ model KelompokKelas {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  @@unique([prodiId, kode, angkatan])
+  @@unique([prodiId, kode, angkatan, deletedAt])
 }
 
 model PenugasanMengajar {
@@ -367,6 +369,7 @@ model PenugasanMengajar {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  @@unique([programMatkulId, kelompokKelasId, dosenId, deletedAt])
   @@index([programMatkulId])
   @@index([kelompokKelasId])
   @@index([dosenId])
@@ -390,7 +393,7 @@ model PreferensiDosen {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  @@unique([dosenId, hariId, slotWaktuId])
+  @@unique([dosenId, hariId, slotWaktuId, deletedAt])
 }
 
 //  ========== BATCH JADWAL & HASIL GA ==========
