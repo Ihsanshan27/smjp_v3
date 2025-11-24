@@ -28,6 +28,7 @@ app.use('/api/kurikulum/kurikulum', require('./module/kurikulum/kurikulum/kuriku
 app.use('/api/kurikulum/program-matkul', require('./module/kurikulum/program-matkul/programMatkul.routes'));
 app.use('/api/pengajaran/penugasan-mengajar', require('./module/pengajaran/penugasan-mengajar/penugasanMengajar.routes'));
 app.use('/api/pengajaran/preferensi-dosen', require('./module/pengajaran/preferensi-dosen/preferensiDosen.routes'));
+app.use('/api/scheduler', require('./module/scheduler/scheduler.routes'));
 
 app.use(errorHandler);
 
