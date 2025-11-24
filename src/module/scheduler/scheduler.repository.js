@@ -130,7 +130,6 @@ async function simpanHasilBatch({
     });
 }
 
-
 async function listBatch({ fakultasId, periodeAkademikId, page = 1, pageSize = 20 }) {
     const where = {
         deletedAt: null,
@@ -284,6 +283,44 @@ async function logFinalGaForBatch({ batchId, generasi, fitness, kromosomTerbaik 
     });
 }
 
+async function setBatchFinal(id) {
+    return prisma.$transaction(async (tx) => {
+        const batch = await tx.batchJadwal.findUnique({ where: { id } });
+        if (!batch || batch.deletedAt) {
+            throw new Error('Batch tidak ditemukan.');
+        }
+
+        // set semua batch lain di kombinasi fakultas+periode ke SIAP
+        await tx.batchJadwal.updateMany({
+            where: {
+                deletedAt: null,
+                fakultasId: batch.fakultasId,
+                periodeId: batch.periodeId,
+                id: { not: batch.id },
+            },
+            data: {
+                status: 'SIAP',
+            },
+        });
+
+        // set batch ini ke FINAL
+        return tx.batchJadwal.update({
+            where: { id: batch.id },
+            data: {
+                status: 'FINAL',
+            },
+        });
+    });
+}
+
+async function softDeleteBatch(id) {
+    return prisma.batchJadwal.update({
+        where: { id },
+        data: {
+            deletedAt: new Date(),
+        },
+    });
+}
 
 module.exports = {
     getPenugasanMengajarSiap,
@@ -296,4 +333,6 @@ module.exports = {
     getBatchById,
     listJadwalWithFilter,
     logFinalGaForBatch,
+    setBatchFinal,
+    softDeleteBatch,
 };

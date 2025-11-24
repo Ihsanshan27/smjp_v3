@@ -45,9 +45,31 @@ async function listJadwal(req, res, next) {
     }
 }
 
+async function setBatchFinal(req, res, next) {
+    try {
+        const { id } = req.params;
+        const data = await schedulerService.setBatchFinalService(id);
+        return success(res, data, 'Batch jadwal diset sebagai FINAL (aktif).');
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function deleteBatch(req, res, next) {
+    try {
+        const { id } = req.params;
+        const deleted = await schedulerService.deleteBatch(id);
+        return success(res, deleted, 'Batch jadwal dihapus.');
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     generate,
     listBatch,
     batchDetail,
     listJadwal,
+    setBatchFinal,
+    deleteBatch,
 };

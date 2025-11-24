@@ -128,9 +128,38 @@ async function listJadwal(query) {
     return schedulerRepository.listJadwalWithFilter(query);
 }
 
+async function setBatchFinalService(id) {
+    const batch = await schedulerRepository.getBatchById(id);
+    if (!batch || batch.deletedAt) {
+        throw new AppError('Batch jadwal tidak ditemukan.', 404, 'BATCH_NOT_FOUND');
+    }
+    const updated = await schedulerRepository.setBatchFinal(id);
+    return updated;
+}
+
+async function deleteBatch(id) {
+    const batch = await schedulerRepository.getBatchById(id);
+    if (!batch || batch.deletedAt) {
+        throw new AppError('Batch jadwal tidak ditemukan.', 404, 'BATCH_NOT_FOUND');
+    }
+
+    if (batch.status === 'FINAL') {
+        throw new AppError(
+            'Batch dengan status FINAL tidak dapat dihapus.',
+            400,
+            'BATCH_FINAL'
+        );
+    }
+
+    const deleted = await schedulerRepository.softDeleteBatch(id);
+    return deleted;
+}
+
 module.exports = {
     generateJadwalOtomatis,
     listBatch,
     getBatchDetail,
     listJadwal,
+    setBatchFinalService,
+    deleteBatch,
 };
