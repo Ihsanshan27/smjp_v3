@@ -26,6 +26,7 @@ app.use('/api/kurikulum/mata-kuliah', require('./module/kurikulum/mata-kuliah/ma
 app.use('/api/kurikulum/kurikulum', require('./module/kurikulum/kurikulum/kurikulum.routes'));
 app.use('/api/master-data/kelompok-kelas', require('./module/master-data/kelompok-kelas/kelompokKelas.routes'));
 app.use('/api/kurikulum/program-matkul', require('./module/kurikulum/program-matkul/programMatkul.routes'));
+app.use('/api/pengajaran/penugasan-mengajar', require('./module/pengajaran/penugasan-mengajar/penugasanMengajar.routes'));
 
 app.use(errorHandler);
 
