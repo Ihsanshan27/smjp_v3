@@ -9,7 +9,7 @@ const {
 } = require('./scheduler.dto');
 
 // generate jadwal GA
-router.post('/generate', auth, role(['ADMIN', 'TU_FAKULTAS', 'TU_PRODI']), validateDto(generateJadwalBodyDto), controller.generate);
+router.post('/generate', auth, role(['ADMIN', 'TU_FAKULTAS']), validateDto(generateJadwalBodyDto), controller.generate);
 
 // list batch
 router.get('/batch', auth, validateDto(listBatchQueryDto), controller.listBatch);

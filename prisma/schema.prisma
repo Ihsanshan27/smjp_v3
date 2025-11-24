@@ -60,6 +60,12 @@ enum JenisMataKuliah {
   PILIHAN
 }
 
+enum StatusPerubahanJadwal {
+  DIAJUKAN
+  DISETUJUI
+  DITOLAK
+}
+
 //  ========== MASTER ORGANISASI ==========
 
 model Fakultas {
@@ -96,9 +102,10 @@ model Prodi {
   pengguna      Pengguna[]
   dosen         Dosen[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  deletedAt                DateTime?
+  PengajuanPerubahanJadwal PengajuanPerubahanJadwal[]
 
   @@unique([kode, deletedAt])
 }
@@ -109,7 +116,7 @@ model Pengguna {
   id       String        @id @default(cuid())
   nama     String
   email    String        @unique
-  password String // hash
+  password String
   peran    PeranPengguna
 
   fakultasId String?
@@ -122,8 +129,9 @@ model Pengguna {
 
   batchDibuat BatchJadwal[]
 
-  pengajuanDibuat    Pengajuan[] @relation("PengajuanDibuatOleh")
-  pengajuanDisetujui Pengajuan[] @relation("PengajuanDisetujuiOleh")
+  PengajuanPerubahanDiajukan PengajuanPerubahanJadwal[] @relation("Perubahan_DiajukanOleh")
+  PengajuanPerubahanDiproses PengajuanPerubahanJadwal[] @relation("Perubahan_DiprosesOleh")
+  PengajuanPerubahanJadwal   PengajuanPerubahanJadwal[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -145,7 +153,6 @@ model Dosen {
 
   penugasan  PenugasanMengajar[]
   preferensi PreferensiDosen[]
-  pengajuan  Pengajuan[]
   gaGen      GaGen[]
 
   createdAt DateTime  @default(now())
@@ -361,9 +368,8 @@ model PenugasanMengajar {
   preferensiRuangJenis JenisRuang? // teori/lab kalau ada preferensi
   status               StatusPenugasanMengajar
 
-  jadwal           JadwalKuliah[]
-  pengajuanKendala PengajuanKendala[]
-  gaGen            GaGen[]
+  jadwal JadwalKuliah[]
+  gaGen  GaGen[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -419,9 +425,8 @@ model BatchJadwal {
   dibuatOlehId String
   dibuatOleh   Pengguna @relation(fields: [dibuatOlehId], references: [id])
 
-  jadwal    JadwalKuliah[]
-  kromosom  GaKromosom[]
-  pengajuan Pengajuan[]
+  jadwal   JadwalKuliah[]
+  kromosom GaKromosom[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -446,11 +451,10 @@ model JadwalKuliah {
   ruangId String
   ruang   Ruang  @relation(fields: [ruangId], references: [id])
 
-  pengajuanKendala PengajuanKendala[]
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  deletedAt                DateTime?
+  PengajuanPerubahanJadwal PengajuanPerubahanJadwal[]
 
   @@index([batchId])
   @@index([hariId, slotWaktuId, ruangId])
@@ -458,49 +462,42 @@ model JadwalKuliah {
 
 //  ========== PENGAJUAN & KENDALA ==========
 
-model Pengajuan {
+model PengajuanPerubahanJadwal {
   id String @id @default(cuid())
 
-  dosenId String
-  dosen   Dosen  @relation(fields: [dosenId], references: [id])
+  jadwalKuliahId String
+  jadwalKuliah   JadwalKuliah @relation(fields: [jadwalKuliahId], references: [id])
 
-  batchId String?
-  batch   BatchJadwal? @relation(fields: [batchId], references: [id])
+  // snapshot jadwal lama
+  hariLamaId      String
+  slotWaktuLamaId String
+  ruangLamaId     String?
 
-  tipe   String // PERMINTAAN_JADWAL, PERUBAHAN_JADWAL, dll
-  status StatusPengajuan @default(DRAF)
-  alasan String?
+  // usulan jadwal baru
+  hariBaruId      String
+  slotWaktuBaruId String
+  ruangBaruId     String?
 
-  dibuatOlehId String
-  dibuatOleh   Pengguna @relation("PengajuanDibuatOleh", fields: [dibuatOlehId], references: [id])
+  prodiId String
+  prodi   Prodi  @relation(fields: [prodiId], references: [id])
 
-  disetujuiOlehId String?
-  disetujuiOleh   Pengguna? @relation("PengajuanDisetujuiOleh", fields: [disetujuiOlehId], references: [id])
+  alasanPengaju String
+  alasanRespon  String?
 
-  kendala PengajuanKendala[]
+  status StatusPerubahanJadwal @default(DIAJUKAN)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-}
+  diajukanOlehId String
+  diajukanOleh   Pengguna @relation("Perubahan_DiajukanOleh", fields: [diajukanOlehId], references: [id])
 
-model PengajuanKendala {
-  id          String    @id @default(cuid())
-  pengajuanId String
-  pengajuan   Pengajuan @relation(fields: [pengajuanId], references: [id])
+  diprosesOlehId String?
+  diprosesOleh   Pengguna? @relation("Perubahan_DiprosesOleh", fields: [diprosesOlehId], references: [id])
+  diprosesPada   DateTime?
 
-  jenisKendala JenisKendala
-  deskripsi    String?
-
-  penugasanMengajarId String?
-  penugasanMengajar   PenugasanMengajar? @relation(fields: [penugasanMengajarId], references: [id])
-
-  jadwalKuliahId String?
-  jadwalKuliah   JadwalKuliah? @relation(fields: [jadwalKuliahId], references: [id])
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  Pengguna   Pengguna? @relation(fields: [penggunaId], references: [id])
+  penggunaId String?
 }
 
 //  ========== GA LOGGING ==========

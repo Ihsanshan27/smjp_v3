@@ -95,6 +95,13 @@ async function generateJadwalOtomatis({
         jumlahGenerasi: totalGenerasi,
     });
 
+    await schedulerRepository.logFinalGaForBatch({
+        batchId: batch.id,
+        generasi: totalGenerasi,
+        fitness: fitnessTerbaik,
+        kromosomTerbaik,
+    });
+
     return {
         mode: 'SAVE',
         stats: {

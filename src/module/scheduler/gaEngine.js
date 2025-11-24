@@ -43,7 +43,7 @@ function generateRandomChromosome({ sessions, hariList, slotList, ruangList }) {
         const ruang = randomChoice(availableRooms);
 
         return {
-            penugasanId: s.penugasanId,
+            penugasanMengajarId: s.penugasanId,
             dosenId: s.dosenId,
             kelompokKelasId: s.kelompokKelasId,
             programMatkulId: s.programMatkulId,

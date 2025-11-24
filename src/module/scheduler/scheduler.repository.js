@@ -118,7 +118,7 @@ async function simpanHasilBatch({
             await tx.jadwalKuliah.createMany({
                 data: kromosomTerbaik.map((g) => ({
                     batchId: batch.id,
-                    penugasanMengajarId: g.penugasanId,
+                    penugasanMengajarId: g.penugasanMengajarId,
                     hariId: g.hariId,
                     slotWaktuId: g.slotWaktuId,
                     ruangId: g.ruangId,
@@ -256,6 +256,35 @@ async function listJadwalWithFilter({
     return { items, total, page, pageSize };
 }
 
+async function logFinalGaForBatch({ batchId, generasi, fitness, kromosomTerbaik }) {
+    return prisma.$transaction(async (tx) => {
+        const krom = await tx.gaKromosom.create({
+            data: {
+                batchId,
+                generasi,
+                fitness,
+                isBest: true,
+            },
+        });
+
+        if (kromosomTerbaik && kromosomTerbaik.length > 0) {
+            await tx.gaGen.createMany({
+                data: kromosomTerbaik.map((g) => ({
+                    kromosomId: krom.id,
+                    penugasanMengajarId: g.penugasanMengajarId,
+                    hariId: g.hariId,
+                    slotWaktuId: g.slotWaktuId,
+                    ruangId: g.ruangId,
+                    dosenId: g.dosenId,
+                })),
+            });
+        }
+
+        return krom;
+    });
+}
+
+
 module.exports = {
     getPenugasanMengajarSiap,
     getRuangAktifByFakultas,
@@ -266,4 +295,5 @@ module.exports = {
     listBatch,
     getBatchById,
     listJadwalWithFilter,
+    logFinalGaForBatch,
 };
