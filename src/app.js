@@ -30,6 +30,7 @@ app.use('/api/pengajaran/penugasan-mengajar', require('./module/pengajaran/penug
 app.use('/api/pengajaran/preferensi-dosen', require('./module/pengajaran/preferensi-dosen/preferensiDosen.routes'));
 app.use('/api/scheduler', require('./module/scheduler/scheduler.routes'));
 app.use('/api/view-jadwal', require('./module/view-jadwal/viewJadwal.routes'));
+app.use('/api/pengajuan-perubahan-jadwal', require('./module/pengajuan-perubahan-jadwal/perubahanJadwal.routes'));
 
 app.use(errorHandler);
 

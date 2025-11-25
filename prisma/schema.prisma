@@ -448,8 +448,8 @@ model JadwalKuliah {
   slotWaktuId String
   slotWaktu   SlotWaktu @relation(fields: [slotWaktuId], references: [id])
 
-  ruangId String
-  ruang   Ruang  @relation(fields: [ruangId], references: [id])
+  ruangId String?
+  ruang   Ruang?  @relation(fields: [ruangId], references: [id])
 
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
