@@ -7,6 +7,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 app.get('/health', (req, res) => {
@@ -31,6 +32,7 @@ app.use('/api/pengajaran/preferensi-dosen', require('./module/pengajaran/prefere
 app.use('/api/scheduler', require('./module/scheduler/scheduler.routes'));
 app.use('/api/view-jadwal', require('./module/view-jadwal/viewJadwal.routes'));
 app.use('/api/pengajuan-perubahan-jadwal', require('./module/pengajuan-perubahan-jadwal/perubahanJadwal.routes'));
+app.use('/api/export', require('./module/export/exportJadwal.routes'));
 
 app.use(errorHandler);
 
