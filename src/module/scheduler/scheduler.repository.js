@@ -130,11 +130,12 @@ async function simpanHasilBatch({
     });
 }
 
-async function listBatch({ fakultasId, periodeAkademikId, page = 1, pageSize = 20 }) {
+async function listBatch({ fakultasId, periodeAkademikId, status, page = 1, pageSize = 20 }) {
     const where = {
         deletedAt: null,
         ...(fakultasId ? { fakultasId } : {}),
         ...(periodeAkademikId ? { periodeId: periodeAkademikId } : {}),
+        ...(status ? { status } : {}),
     };
 
     const [items, total] = await Promise.all([
@@ -313,14 +314,86 @@ async function setBatchFinal(id) {
     });
 }
 
-async function softDeleteBatch(id) {
-    return prisma.batchJadwal.update({
-        where: { id },
-        data: {
-            deletedAt: new Date(),
-        },
-    });
+async function setBatchStatus(id, status) {
+    return prisma.$transaction(async (tx) => {
+        const batch = await tx.batchJadwal.findUnique({
+            where: { id },
+        })
+
+        if (!batch || batch.deletedAt) {
+            throw new Error('Batch tidak ditemukan.');
+        }
+
+        if (status === 'FINAL') {
+            await tx.batchJadwal.updateMany({
+                where: {
+                    deletedAt: null,
+                    fakultasId: batch.fakultasId,
+                    periodeId: batch.periodeId,
+                    id: { not: batch.id },
+                },
+                data: {
+                    status: 'SIAP',
+                },
+            });
+        }
+
+        const updated = await tx.batchJadwal.update({
+            where: { id: batch.id },
+            data: {
+                status,
+            },
+        });
+
+        return updated;
+    })
 }
+
+async function deleteBatchWithItems(id) {
+    return prisma.$transaction(async (tx) => {
+        const batch = await tx.batchJadwal.findUnique({ where: { id } })
+
+        if (!batch || batch.deletedAt) {
+            throw new Error('Batch tidak ditemukan.');
+        }
+
+        const now = new Date()
+        await tx.jadwalKuliah.updateMany({
+            where: {
+                batchId: batch.id,
+                deletedAt: null,
+            },
+            data: {
+                deletedAt: now,
+            },
+        })
+
+        await tx.gaGen.deleteMany({
+            where: {
+                kromosom: {
+                    batchId: batch.id,
+                },
+            },
+        });
+
+        await tx.gaKromosom.deleteMany({
+            where: {
+                batchId: batch.id,
+            },
+        });
+        const updatedBatch = await tx.batchJadwal.update({
+            where: { id: batch.id },
+            data: {
+                deletedAt: now,
+                status: 'SIAP', // opsional, biar ga FINAL di data mati
+            },
+        });
+
+        return updatedBatch;
+
+    })
+}
+
 
 module.exports = {
     getPenugasanMengajarSiap,
@@ -334,5 +407,6 @@ module.exports = {
     listJadwalWithFilter,
     logFinalGaForBatch,
     setBatchFinal,
-    softDeleteBatch,
+    setBatchStatus,
+    deleteBatchWithItems,
 };

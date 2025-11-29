@@ -1,5 +1,10 @@
 const { z } = require('zod');
 
+const StatusBatchEnum = z.enum([
+    'SIAP',
+    'FINAL',
+]);
+
 const generateJadwalBodyDto = z.object({
     body: z.object({
         fakultasId: z.string(),
@@ -28,6 +33,7 @@ const listBatchQueryDto = z.object({
     query: z.object({
         fakultasId: z.string().optional(),
         periodeAkademikId: z.string().optional(),
+        status: StatusBatchEnum.optional(),
         page: z.coerce.number().int().min(1).default(1).optional(),
         pageSize: z.coerce.number().int().min(1).max(100).default(20).optional(),
     }),
@@ -47,8 +53,18 @@ const listJadwalQueryDto = z.object({
     }),
 });
 
+const updateBatchStatusDto = z.object({
+    params: z.object({
+        id: z.string(),
+    }),
+    body: z.object({
+        status: StatusBatchEnum,
+    })
+});
+
 module.exports = {
     generateJadwalBodyDto,
     listBatchQueryDto,
     listJadwalQueryDto,
+    updateBatchStatusDto,
 };

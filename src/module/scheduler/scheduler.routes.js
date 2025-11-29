@@ -6,6 +6,7 @@ const {
     generateJadwalBodyDto,
     listBatchQueryDto,
     listJadwalQueryDto,
+    updateBatchStatusDto,
 } = require('./scheduler.dto');
 
 // generate jadwal GA
@@ -18,6 +19,8 @@ router.get('/batch/:id', auth, controller.batchDetail);
 router.get('/jadwal', auth, validateDto(listJadwalQueryDto), controller.listJadwal);
 // set batch final
 router.patch('/batch/:id/set-final', auth, role(['ADMIN', 'TU_FAKULTAS']), controller.setBatchFinal);
+//batch update status
+router.patch('/batch/:id/status', auth, role(['ADMIN', 'TU_FAKULTAS']), validateDto(updateBatchStatusDto), controller.updateBatchStatus);
 // delete batch
 router.delete('/batch/:id', auth, role(['ADMIN', 'TU_FAKULTAS']), controller.deleteBatch);
 

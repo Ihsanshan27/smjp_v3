@@ -65,6 +65,16 @@ async function deleteBatch(req, res, next) {
     }
 }
 
+async function updateBatchStatus(req, res, next) {
+    try {
+        const { params, body } = req.validated;
+        const data = await schedulerService.updateBatchStatus(params.id, body.status);
+        return success(res, data, 'Status batch jadwal diperbarui.');
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     generate,
     listBatch,
@@ -72,4 +82,5 @@ module.exports = {
     listJadwal,
     setBatchFinal,
     deleteBatch,
+    updateBatchStatus,
 };
