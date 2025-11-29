@@ -116,6 +116,136 @@ async function listBatch(query) {
     return schedulerRepository.listBatch(query);
 }
 
+async function listGaKromosomByBatchService({ id, batchId, page, pageSize, isBest }) {
+    const result = await schedulerRepository.findGaKromosomByBatch({
+        id,
+        batchId,
+        page,
+        pageSize,
+        isBest,
+    });
+
+    return {
+        ...result,
+        items: result.items.map((k) => ({
+            id: k.id,
+            batchId: k.batchId,
+            generasi: k.generasi,
+            fitness: k.fitness,
+            isBest: k.isBest,
+            createdAt: k.createdAt,
+        })),
+    };
+}
+
+async function getGaKromosomDetailService(id) {
+    const data = await schedulerRepository.findGaKromosomById(id);
+    if (!data) {
+        throw new AppError('Kromosom GA tidak ditemukan.', 404, 'GA_KROMOSOM_NOT_FOUND');
+    }
+
+    const { batchJadwal, gen, ...krom } = data;
+
+    return {
+        id: krom.id,
+        generasi: krom.generasi,
+        fitness: krom.fitness,
+        isBest: krom.isBest,
+        createdAt: krom.createdAt,
+
+        batch: batchJadwal
+            ? {
+                id: batchJadwal.id,
+                nama: batchJadwal.nama,
+                fakultas: batchJadwal.fakultas
+                    ? {
+                        id: batchJadwal.fakultas.id,
+                        kode: batchJadwal.fakultas.kode,
+                        nama: batchJadwal.fakultas.nama,
+                    }
+                    : null,
+                periode: batchJadwal.periode
+                    ? {
+                        id: batchJadwal.periode.id,
+                        nama: batchJadwal.periode.nama,
+                    }
+                    : null,
+            }
+            : null,
+
+        jumlahGen: gen.length,
+
+        gen: gen.map((g) => ({
+            id: g.id,
+            penugasanMengajarId: g.penugasanMengajarId,
+
+            waktu: {
+                hariId: g.hariId,
+                hariNama: g.hari?.nama ?? null,
+                slotWaktuId: g.slotWaktuId,
+                jamMulai: g.slotWaktu?.jamMulai ?? null,
+                jamSelesai: g.slotWaktu?.jamSelesai ?? null,
+            },
+
+            ruang: g.ruang
+                ? {
+                    id: g.ruang.id,
+                    kode: g.ruang.kode,
+                    nama: g.ruang.nama,
+                    jenis: g.ruang.jenis,
+                }
+                : null,
+
+            matkul: g.penugasanMengajar?.programMatkul?.mataKuliah
+                ? {
+                    id: g.penugasanMengajar.programMatkul.mataKuliah.id,
+                    kode: g.penugasanMengajar.programMatkul.mataKuliah.kode,
+                    nama: g.penugasanMengajar.programMatkul.mataKuliah.nama,
+                    sksTotal: g.penugasanMengajar.programMatkul.mataKuliah.sksTotal ?? null,
+                }
+                : null,
+
+            prodi: g.penugasanMengajar?.programMatkul?.prodi
+                ? {
+                    id: g.penugasanMengajar.programMatkul.prodi.id,
+                    kode: g.penugasanMengajar.programMatkul.prodi.kode,
+                    nama: g.penugasanMengajar.programMatkul.prodi.nama,
+                }
+                : null,
+
+            periode: g.penugasanMengajar?.programMatkul?.periode
+                ? {
+                    id: g.penugasanMengajar.programMatkul.periode.id,
+                    nama: g.penugasanMengajar.programMatkul.periode.nama,
+                }
+                : null,
+
+            dosen: g.dosen
+                ? {
+                    id: g.dosen.id,
+                    nidn: g.dosen.nidn,
+                    nama: g.dosen.pengguna?.nama ?? null,
+                }
+                : g.penugasanMengajar?.dosen
+                    ? {
+                        id: g.penugasanMengajar.dosen.id,
+                        nidn: g.penugasanMengajar.dosen.nidn,
+                        nama: g.penugasanMengajar.dosen.pengguna?.nama ?? null,
+                    }
+                    : null,
+
+            kelas: g.penugasanMengajar?.kelompokKelas
+                ? {
+                    id: g.penugasanMengajar.kelompokKelas.id,
+                    kode: g.penugasanMengajar.kelompokKelas.kode,
+                    angkatan: g.penugasanMengajar.kelompokKelas.angkatan,
+                }
+                : null,
+        })),
+    };
+}
+
+
 async function getBatchDetail(id) {
     const batch = await schedulerRepository.getBatchById(id);
     if (!batch || batch.deletedAt) {
@@ -168,6 +298,8 @@ async function deleteBatch(id) {
 module.exports = {
     generateJadwalOtomatis,
     listBatch,
+    listGaKromosomByBatchService,
+    getGaKromosomDetailService,
     getBatchDetail,
     listJadwal,
     setBatchFinalService,

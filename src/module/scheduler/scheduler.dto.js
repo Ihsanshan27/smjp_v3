@@ -53,6 +53,29 @@ const listJadwalQueryDto = z.object({
     }),
 });
 
+const listGaKromosomByBatchDto = z.object({
+    query: z.object({
+        id: z.string().optional(),
+        batchId: z.string().optional(),
+        page: z.coerce.number().int().min(1).default(1).optional(),
+        pageSize: z.coerce.number().int().min(1).max(100).default(20).optional(),
+        isBest: z
+            .union([z.string(), z.boolean()])
+            .optional()
+            .transform((val) => {
+                if (val === undefined) return undefined;
+                if (typeof val === 'boolean') return val;
+                return val === 'true';
+            }),
+    }),
+});
+
+const getGaKromosomDetailDto = z.object({
+    params: z.object({
+        id: z.string(),
+    }),
+});
+
 const updateBatchStatusDto = z.object({
     params: z.object({
         id: z.string(),
@@ -66,5 +89,7 @@ module.exports = {
     generateJadwalBodyDto,
     listBatchQueryDto,
     listJadwalQueryDto,
+    listGaKromosomByBatchDto,
+    getGaKromosomDetailDto,
     updateBatchStatusDto,
 };

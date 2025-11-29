@@ -50,6 +50,75 @@ async function getRuangAktifByFakultas(fakultasId) {
     });
 }
 
+async function findGaKromosomByBatch({ id, batchId, isBest, page = 1, pageSize = 20 }) {
+    const where = {
+        ...(id ? { id } : {}),
+        ...(batchId ? { batchId } : {}),  // 🔥 kalau optional → skip
+        ...(typeof isBest === 'boolean' ? { isBest } : {}),
+    };
+
+    const [items, total] = await Promise.all([
+        prisma.gaKromosom.findMany({
+            where,
+            skip: (page - 1) * pageSize,
+            take: pageSize,
+            orderBy: [
+                { generasi: 'asc' },
+                { createdAt: 'asc' },
+            ],
+        }),
+        prisma.gaKromosom.count({ where }),
+    ]);
+
+    return {
+        items,
+        total,
+        page,
+        pageSize,
+    };
+}
+
+
+
+async function findGaKromosomById(id) {
+    return prisma.gaKromosom.findUnique({
+        where: { id },
+        include: {
+            batch: {
+                include: {
+                    fakultas: true,
+                    periode: true,
+                },
+            },
+            gen: {
+                include: {
+                    penugasanMengajar: {
+                        include: {
+                            programMatkul: {
+                                include: {
+                                    mataKuliah: true,
+                                    prodi: true,
+                                    periode: true,
+                                },
+                            },
+                            dosen: {
+                                include: { pengguna: true },
+                            },
+                            kelompokKelas: true,
+                        },
+                    },
+                    hari: true,
+                    slotWaktu: true,
+                    ruang: true,
+                    dosen: {
+                        include: { pengguna: true },
+                    },
+                },
+            },
+        },
+    });
+}
+
 async function getHariList() {
     return prisma.hari.findMany({
         where: { deletedAt: null },
@@ -385,7 +454,7 @@ async function deleteBatchWithItems(id) {
             where: { id: batch.id },
             data: {
                 deletedAt: now,
-                status: 'SIAP', // opsional, biar ga FINAL di data mati
+                status: 'SIAP',
             },
         });
 
@@ -400,6 +469,8 @@ module.exports = {
     getRuangAktifByFakultas,
     getHariList,
     getSlotList,
+    findGaKromosomByBatch,
+    findGaKromosomById,
     getPreferensiDosenMap,
     simpanHasilBatch,
     listBatch,

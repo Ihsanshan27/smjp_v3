@@ -45,6 +45,34 @@ async function listJadwal(req, res, next) {
     }
 }
 
+async function listGaKromosomByBatch(req, res, next) {
+    try {
+        const { query } = req.validated;
+
+        const result = await schedulerService.listGaKromosomByBatchService({
+            id: query.id ?? undefined, // opsional
+            batchId: query.batchId ?? undefined, // opsional
+            page: query.page,
+            pageSize: query.pageSize,
+            isBest: query.isBest,
+        });
+
+        return success(res, result, 'Daftar kromosom GA.');
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function getGaKromosomDetail(req, res, next) {
+    try {
+        const { params } = req.validated;
+        const result = await schedulerService.getGaKromosomDetailService(params.id);
+        return success(res, result, 'Detail kromosom GA.');
+    } catch (err) {
+        next(err);
+    }
+}
+
 async function setBatchFinal(req, res, next) {
     try {
         const { id } = req.params;
@@ -80,6 +108,8 @@ module.exports = {
     listBatch,
     batchDetail,
     listJadwal,
+    listGaKromosomByBatch,
+    getGaKromosomDetail,
     setBatchFinal,
     deleteBatch,
     updateBatchStatus,

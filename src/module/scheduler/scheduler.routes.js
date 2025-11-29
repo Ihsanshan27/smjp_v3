@@ -7,6 +7,8 @@ const {
     listBatchQueryDto,
     listJadwalQueryDto,
     updateBatchStatusDto,
+    listGaKromosomByBatchDto,
+    getGaKromosomDetailDto,
 } = require('./scheduler.dto');
 
 // generate jadwal GA
@@ -23,5 +25,9 @@ router.patch('/batch/:id/set-final', auth, role(['ADMIN', 'TU_FAKULTAS']), contr
 router.patch('/batch/:id/status', auth, role(['ADMIN', 'TU_FAKULTAS']), validateDto(updateBatchStatusDto), controller.updateBatchStatus);
 // delete batch
 router.delete('/batch/:id', auth, role(['ADMIN', 'TU_FAKULTAS']), controller.deleteBatch);
+// List kromosom 
+router.get('/kromosom', auth, role(['ADMIN', 'TU_FAKULTAS']), validateDto(listGaKromosomByBatchDto), controller.listGaKromosomByBatch);
+// Detail kromosom (plus gen)
+router.get('/kromosom/:id', auth, role(['ADMIN', 'TU_FAKULTAS']), validateDto(getGaKromosomDetailDto), controller.getGaKromosomDetail);
 
 module.exports = router;
